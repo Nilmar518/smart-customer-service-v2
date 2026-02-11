@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart-customer-postgres-v2
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: your-password
+      POSTGRES_DB: smart_customer_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_v2:/var/lib/postgresql/data
+
+volumes:
+  pgdata_v2:

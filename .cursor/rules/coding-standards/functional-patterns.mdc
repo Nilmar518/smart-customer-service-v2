@@ -1,0 +1,9 @@
+---
+description: Functional patterns
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+- Preferir funciones puras y no mutar datos
+- Componer funciones pequeñas
+- Lógica en servicios, no en controladores

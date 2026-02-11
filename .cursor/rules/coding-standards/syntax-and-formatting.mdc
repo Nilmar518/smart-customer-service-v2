@@ -1,0 +1,9 @@
+---
+description: Syntax & formatting
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+- 2 espacios de indentación
+- `camelCase` para variables/funciones, `PascalCase` para tipos/clases
+- Comillas simples

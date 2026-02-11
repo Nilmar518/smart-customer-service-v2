@@ -1,0 +1,10 @@
+---
+description: Types & models
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+- Usar `type` en vez de `interface` (como ya hace el proyecto en `auth.types.ts`)
+- No usar `enum`, usar objetos `as const` + union de valores
+- Sufijos: `*.types.ts` para DTOs y tipos, `*.entity.ts` para entidades
+- Nombres de tipos en PascalCase

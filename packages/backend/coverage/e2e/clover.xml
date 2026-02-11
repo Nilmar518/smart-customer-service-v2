@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1770848903332" clover="3.2.0">
+  <project timestamp="1770848903332" name="All files">
+    <metrics statements="69" coveredstatements="69" conditionals="23" coveredconditionals="23" methods="12" coveredmethods="12" elements="104" coveredelements="104" complexity="0" loc="69" ncloc="69" packages="2" files="4" classes="4"/>
+    <package name="auth">
+      <metrics statements="64" coveredstatements="64" conditionals="23" coveredconditionals="23" methods="11" coveredmethods="11"/>
+      <file name="auth.controller.ts" path="D:\migo\repos\smart-customer-service-v2\packages\backend\src\auth\auth.controller.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="10" count="2" type="stmt"/>
+        <line num="11" count="14" type="stmt"/>
+        <line num="15" count="2" type="stmt"/>
+        <line num="23" count="7" type="stmt"/>
+      </file>
+      <file name="auth.guard.ts" path="D:\migo\repos\smart-customer-service-v2\packages\backend\src\auth\auth.guard.ts">
+        <metrics statements="14" coveredstatements="14" conditionals="5" coveredconditionals="5" methods="2" coveredmethods="2"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="6" count="4" type="stmt"/>
+        <line num="9" count="3" type="stmt"/>
+        <line num="10" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="19" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="23" count="2" type="stmt"/>
+        <line num="24" count="2" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+      </file>
+      <file name="auth.service.ts" path="D:\migo\repos\smart-customer-service-v2\packages\backend\src\auth\auth.service.ts">
+        <metrics statements="42" coveredstatements="42" conditionals="18" coveredconditionals="18" methods="6" coveredmethods="6"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="10" count="2" type="stmt"/>
+        <line num="11" count="2" type="stmt"/>
+        <line num="15" count="14" type="stmt"/>
+        <line num="16" count="14" type="stmt"/>
+        <line num="18" count="14" type="cond" truecount="4" falsecount="0"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="22" count="11" type="stmt"/>
+        <line num="27" count="11" type="cond" truecount="1" falsecount="0"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="31" count="10" type="stmt"/>
+        <line num="33" count="10" type="stmt"/>
+        <line num="42" count="10" type="stmt"/>
+        <line num="43" count="10" type="stmt"/>
+        <line num="45" count="10" type="stmt"/>
+        <line num="58" count="7" type="stmt"/>
+        <line num="59" count="7" type="stmt"/>
+        <line num="61" count="7" type="cond" truecount="3" falsecount="0"/>
+        <line num="62" count="2" type="stmt"/>
+        <line num="65" count="5" type="stmt"/>
+        <line num="70" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="74" count="4" type="stmt"/>
+        <line num="75" count="4" type="stmt"/>
+        <line num="77" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="81" count="1" type="stmt"/>
+        <line num="83" count="1" type="stmt"/>
+        <line num="95" count="11" type="stmt"/>
+        <line num="99" count="10" type="stmt"/>
+        <line num="100" count="10" type="stmt"/>
+        <line num="101" count="10" type="stmt"/>
+        <line num="105" count="4" type="stmt"/>
+        <line num="106" count="4" type="cond" truecount="3" falsecount="0"/>
+        <line num="108" count="3" type="stmt"/>
+        <line num="109" count="3" type="stmt"/>
+        <line num="111" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="113" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="hello">
+      <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+      <file name="hello.controller.ts" path="D:\migo\repos\smart-customer-service-v2\packages\backend\src\hello\hello.controller.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

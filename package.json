@@ -1,0 +1,16 @@
+{
+  "name": "smart-customer-service-v2",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@9.15.4",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "api:tests:ut": "pnpm --filter @smart-customer-service/backend test:ut",
+    "api:tests:e2e": "pnpm --filter @smart-customer-service/backend test:e2e"
+  }
+}

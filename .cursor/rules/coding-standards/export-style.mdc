@@ -1,0 +1,8 @@
+---
+description: Export style
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+- Usar ESM (`import`/`export`)
+- Usar named exports, no `export default`

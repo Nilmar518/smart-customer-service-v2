@@ -1,0 +1,13 @@
+---
+description: Testing conventions
+globs: ["**/*.spec.ts"]
+alwaysApply: true
+---
+
+- Tests unitarios en `packages/backend/test/unit/`
+- Tests e2e en `packages/backend/test/e2e/`
+- Nombrar archivos: `<nombre>.spec.ts` para unitarios, `<nombre>.e2e.spec.ts` para e2e
+- Usar `describe` para agrupar por clase/método
+- Usar `it('should ...')` para cada caso
+- Mockear dependencias externas (BD, servicios externos) en tests unitarios
+- En tests e2e, usar módulo de test que reemplace la BD real

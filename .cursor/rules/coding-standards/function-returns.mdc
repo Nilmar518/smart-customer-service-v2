@@ -1,0 +1,9 @@
+---
+description: Function returns & style
+globs: ["**/*.ts", "**/*.tsx"]
+alwaysApply: true
+---
+
+- Siempre indicar tipo de retorno explícito
+- `async` siempre devuelve `Promise<T>`
+- Funciones que no retornan nada: `: void`
