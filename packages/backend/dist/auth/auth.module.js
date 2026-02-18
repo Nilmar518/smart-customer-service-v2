@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
+const firestore_module_1 = require("../firestore/firestore.module");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const auth_guard_1 = require("./auth.guard");
@@ -22,6 +23,7 @@ exports.AuthModule = AuthModule = __decorate([
                 secret: process.env.JWT_SECRET || 'dev-secret',
                 signOptions: { expiresIn: '15m' },
             }),
+            firestore_module_1.FirestoreModule,
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, auth_guard_1.AuthGuard],

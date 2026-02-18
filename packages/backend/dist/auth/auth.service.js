@@ -14,10 +14,12 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("typeorm");
 const jwt_1 = require("@nestjs/jwt");
 const crypto_1 = require("crypto");
+const firestore_service_1 = require("../firestore/firestore.service");
 let AuthService = class AuthService {
-    constructor(dataSource, jwtService) {
+    constructor(dataSource, jwtService, firestoreService) {
         this.dataSource = dataSource;
         this.jwtService = jwtService;
+        this.firestoreService = firestoreService;
     }
     async signUp(dto) {
         const email = dto.email?.trim().toLowerCase();
@@ -36,6 +38,13 @@ let AuthService = class AuthService {
       RETURNING id, email, first_name, last_name, created_at
       `, [email, passwordHash, dto.firstName || null, dto.lastName || null]);
         const user = result[0];
+        await this.firestoreService.saveUser({
+            id: user.id,
+            email: user.email,
+            firstName: user.first_name ?? null,
+            lastName: user.last_name ?? null,
+            createdAt: user.created_at,
+        });
         const token = this.signToken(user.id, user.email);
         return {
             user: {
@@ -63,13 +72,14 @@ let AuthService = class AuthService {
         if (!valid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
+        const firestoreUser = await this.firestoreService.getUserByEmail(user.email);
         const token = this.signToken(user.id, user.email);
         return {
             user: {
                 id: user.id,
                 email: user.email,
-                firstName: user.first_name,
-                lastName: user.last_name,
+                firstName: firestoreUser?.firstName ?? user.first_name,
+                lastName: firestoreUser?.lastName ?? user.last_name,
             },
             accessToken: token,
         };
@@ -97,6 +107,7 @@ exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [typeorm_1.DataSource,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        firestore_service_1.FirestoreService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

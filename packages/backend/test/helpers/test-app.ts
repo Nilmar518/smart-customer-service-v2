@@ -6,6 +6,10 @@ import { AuthService } from '../../src/auth/auth.service';
 import { AuthController } from '../../src/auth/auth.controller';
 import { AuthGuard } from '../../src/auth/auth.guard';
 import { HelloController } from '../../src/hello/hello.controller';
+import { FirestoreService } from '../../src/firestore/firestore.service';
+import { WeatherController } from '../../src/weather/weather.controller';
+import { WeatherService } from '../../src/weather/weather.service';
+import { FirestoreUser } from '../../src/firestore/firestore.types';
 
 export type FakeUser = {
   id: string;
@@ -17,6 +21,7 @@ export type FakeUser = {
 };
 
 const usersStore = new Map<string, FakeUser>();
+const firestoreStore = new Map<string, FirestoreUser>();
 let idCounter = 0;
 
 function createMockDataSource(): Partial<DataSource> {
@@ -85,17 +90,56 @@ function createMockDataSource(): Partial<DataSource> {
   };
 }
 
+function createMockFirestoreService(): Partial<FirestoreService> {
+  return {
+    onModuleInit: jest.fn(),
+    saveUser: jest.fn().mockImplementation((user: FirestoreUser) => {
+      firestoreStore.set(user.id, user);
+      return Promise.resolve();
+    }),
+    getUserByEmail: jest.fn().mockImplementation((email: string) => {
+      const user = [...firestoreStore.values()].find((u) => u.email === email);
+      return Promise.resolve(user ?? null);
+    }),
+    getUserById: jest.fn().mockImplementation((id: string) => {
+      return Promise.resolve(firestoreStore.get(id) ?? null);
+    }),
+  };
+}
+
+function createMockWeatherService(): Partial<WeatherService> {
+  return {
+    getWeather: jest.fn().mockImplementation((city?: string) => {
+      return Promise.resolve({
+        city: city || 'La Paz',
+        temperature: 12.5,
+        description: 'cielo claro',
+        icon: '01d',
+        humidity: 45,
+        windSpeed: 3.2,
+      });
+    }),
+  };
+}
+
 export function getUsersStore(): Map<string, FakeUser> {
   return usersStore;
 }
 
+export function getFirestoreStore(): Map<string, FirestoreUser> {
+  return firestoreStore;
+}
+
 export function clearUsersStore(): void {
   usersStore.clear();
+  firestoreStore.clear();
   idCounter = 0;
 }
 
 export async function createTestApp(): Promise<INestApplication> {
   const mockDataSource = createMockDataSource();
+  const mockFirestoreService = createMockFirestoreService();
+  const mockWeatherService = createMockWeatherService();
 
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [
@@ -104,11 +148,13 @@ export async function createTestApp(): Promise<INestApplication> {
         signOptions: { expiresIn: '15m' },
       }),
     ],
-    controllers: [AuthController, HelloController],
+    controllers: [AuthController, HelloController, WeatherController],
     providers: [
       AuthService,
       AuthGuard,
       { provide: DataSource, useValue: mockDataSource },
+      { provide: FirestoreService, useValue: mockFirestoreService },
+      { provide: WeatherService, useValue: mockWeatherService },
     ],
   }).compile();
 

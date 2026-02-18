@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import { DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { FirestoreService } from '../firestore/firestore.service';
 import { LoginDto, SignUpDto } from './auth.types';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly jwtService: JwtService,
+    private readonly firestoreService: FirestoreService,
   ) {}
 
   async signUp(dto: SignUpDto) {
@@ -40,6 +42,15 @@ export class AuthService {
     );
 
     const user = result[0];
+
+    await this.firestoreService.saveUser({
+      id: user.id,
+      email: user.email,
+      firstName: user.first_name ?? null,
+      lastName: user.last_name ?? null,
+      createdAt: user.created_at,
+    });
+
     const token = this.signToken(user.id, user.email);
 
     return {
@@ -78,14 +89,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const firestoreUser = await this.firestoreService.getUserByEmail(user.email);
+
     const token = this.signToken(user.id, user.email);
 
     return {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.first_name,
-        lastName: user.last_name,
+        firstName: firestoreUser?.firstName ?? user.first_name,
+        lastName: firestoreUser?.lastName ?? user.last_name,
       },
       accessToken: token,
     };

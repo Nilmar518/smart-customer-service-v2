@@ -3,21 +3,29 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DataSource } from 'typeorm';
 import { AuthService } from '../../src/auth/auth.service';
+import { FirestoreService } from '../../src/firestore/firestore.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let dataSource: { query: jest.Mock };
   let jwtService: { sign: jest.Mock };
+  let firestoreService: { saveUser: jest.Mock; getUserByEmail: jest.Mock; getUserById: jest.Mock };
 
   beforeEach(async () => {
     dataSource = { query: jest.fn() };
     jwtService = { sign: jest.fn().mockReturnValue('mock-token') };
+    firestoreService = {
+      saveUser: jest.fn().mockResolvedValue(undefined),
+      getUserByEmail: jest.fn().mockResolvedValue(null),
+      getUserById: jest.fn().mockResolvedValue(null),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: DataSource, useValue: dataSource },
         { provide: JwtService, useValue: jwtService },
+        { provide: FirestoreService, useValue: firestoreService },
       ],
     }).compile();
 
@@ -56,6 +64,35 @@ describe('AuthService', () => {
       expect(jwtService.sign).toHaveBeenCalledWith({
         sub: '1',
         email: 'test@example.com',
+      });
+    });
+
+    it('should save user to Firestore after creating in PostgreSQL', async () => {
+      dataSource.query
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          {
+            id: '1',
+            email: 'test@example.com',
+            first_name: 'John',
+            last_name: 'Doe',
+            created_at: '2024-01-01T00:00:00.000Z',
+          },
+        ]);
+
+      await service.signUp({
+        email: 'test@example.com',
+        password: 'password123',
+        firstName: 'John',
+        lastName: 'Doe',
+      });
+
+      expect(firestoreService.saveUser).toHaveBeenCalledWith({
+        id: '1',
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        createdAt: '2024-01-01T00:00:00.000Z',
       });
     });
 
@@ -157,7 +194,6 @@ describe('AuthService', () => {
 
   describe('login', () => {
     const setupUserForLogin = (password: string) => {
-      // Hash the password the same way AuthService does
       const crypto = require('crypto');
       const salt = crypto.randomBytes(16).toString('hex');
       const hash = crypto.scryptSync(password, salt, 64).toString('hex');
@@ -175,6 +211,13 @@ describe('AuthService', () => {
     it('should login correctly and return user + token', async () => {
       const user = setupUserForLogin('password123');
       dataSource.query.mockResolvedValueOnce([user]);
+      firestoreService.getUserByEmail.mockResolvedValueOnce({
+        id: '1',
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        createdAt: '2024-01-01T00:00:00.000Z',
+      });
 
       const result = await service.login({
         email: 'test@example.com',
@@ -188,6 +231,32 @@ describe('AuthService', () => {
         lastName: 'Doe',
       });
       expect(result.accessToken).toBe('mock-token');
+    });
+
+    it('should read user from Firestore on login', async () => {
+      const user = setupUserForLogin('password123');
+      dataSource.query.mockResolvedValueOnce([user]);
+
+      await service.login({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+
+      expect(firestoreService.getUserByEmail).toHaveBeenCalledWith('test@example.com');
+    });
+
+    it('should fallback to PostgreSQL data when Firestore returns null', async () => {
+      const user = setupUserForLogin('password123');
+      dataSource.query.mockResolvedValueOnce([user]);
+      firestoreService.getUserByEmail.mockResolvedValueOnce(null);
+
+      const result = await service.login({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+
+      expect(result.user.firstName).toBe('John');
+      expect(result.user.lastName).toBe('Doe');
     });
 
     it('should trim and lowercase the email', async () => {
@@ -242,7 +311,6 @@ describe('AuthService', () => {
     });
 
     it('should return false if stored hash has different length than computed hash', () => {
-      // Use a very short hash that won't match the 64-byte scrypt output
       const result = (service as any).verifyPassword('password', 'abcd.ef');
       expect(result).toBe(false);
     });

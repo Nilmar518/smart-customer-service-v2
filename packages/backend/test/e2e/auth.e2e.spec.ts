@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { createTestApp, clearUsersStore, getUsersStore } from '../helpers/test-app';
+import { createTestApp, clearUsersStore, getUsersStore, getFirestoreStore } from '../helpers/test-app';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -34,6 +34,24 @@ describe('Auth (e2e)', () => {
       expect(res.body.user.email).toBe('new@example.com');
       expect(res.body.user.firstName).toBe('John');
       expect(res.body.user.lastName).toBe('Doe');
+    });
+
+    it('should save user to Firestore mock on signup', async () => {
+      await request(app.getHttpServer())
+        .post('/api/auth/signup')
+        .send({
+          email: 'firestore@example.com',
+          password: 'password123',
+          firstName: 'Jane',
+          lastName: 'Doe',
+        })
+        .expect(201);
+
+      const store = getFirestoreStore();
+      const firestoreUser = [...store.values()].find((u) => u.email === 'firestore@example.com');
+      expect(firestoreUser).toBeDefined();
+      expect(firestoreUser!.firstName).toBe('Jane');
+      expect(firestoreUser!.lastName).toBe('Doe');
     });
 
     it('should return 400 if email is missing', async () => {

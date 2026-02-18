@@ -11,6 +11,8 @@ const config: Config = {
     'src/**/*.ts',
     '!src/main.ts',
     '!src/database/**/*.ts',
+    '!src/firestore/**/*.ts',
+    '!src/weather/weather.service.ts',
     '!src/**/*.module.ts',
   ],
   coverageDirectory: 'coverage/e2e',

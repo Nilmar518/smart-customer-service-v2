@@ -1,0 +1,209 @@
+name: CD - Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Permitir ejecución manual
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  BACKEND_SERVICE: smart-customer-backend-v2
+  FRONTEND_SERVICE: smart-customer-frontend-v2
+  REGISTRY: gcr.io
+  CLOUD_SQL_INSTANCE: info-lapaz-2:us-central1:smart-customer-db
+
+jobs:
+  # Generar versión semántica basada en Conventional Commits
+  version:
+    name: Generate Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      changelog: ${{ steps.semver.outputs.changelog }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necesario para analizar commits
+
+      - name: Generate Semantic Version
+        id: semver
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+          release_branches: main
+          dry_run: false
+          tag_prefix: v
+
+  # Build y push de Backend
+  build-backend:
+    name: Build Backend
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build backend
+        run: pnpm --filter @smart-customer-service/backend build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ needs.version.outputs.version }}"
+          IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:latest"
+
+          docker build -f packages/backend/Dockerfile -t $IMAGE -t $IMAGE_LATEST .
+          docker push $IMAGE
+          docker push $IMAGE_LATEST
+
+  # Build y push de Frontend
+  build-frontend:
+    name: Build Frontend
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        run: pnpm --filter @smart-customer-service/frontend build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ needs.version.outputs.version }}"
+          IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:latest"
+
+          docker build -f packages/frontend/Dockerfile -t $IMAGE -t $IMAGE_LATEST .
+          docker push $IMAGE
+          docker push $IMAGE_LATEST
+
+  # Deploy Backend a Cloud Run
+  deploy-backend:
+    name: Deploy Backend to Cloud Run
+    needs: [version, build-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.BACKEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ needs.version.outputs.version }}
+          env_vars: |
+            NODE_ENV=production
+            DB_PORT=5432
+            INSTANCE_UNIX_SOCKET=/cloudsql/${{ env.CLOUD_SQL_INSTANCE }}
+            FRONTEND_URL=https://${{ env.FRONTEND_SERVICE }}-292882583632.${{ env.REGION }}.run.app
+          secrets: |
+            DB_USER=db-user:latest
+            DB_PASSWORD=db-password:latest
+            DB_NAME=db-name:latest
+            JWT_SECRET=jwt-secret:latest
+          flags: |
+            --port=8080
+            --cpu=1
+            --memory=512Mi
+            --timeout=300
+            --min-instances=0
+            --max-instances=10
+            --allow-unauthenticated
+            --add-cloudsql-instances=${{ env.CLOUD_SQL_INSTANCE }}
+
+  # Deploy Frontend a Cloud Run
+  deploy-frontend:
+    name: Deploy Frontend to Cloud Run
+    needs: [version, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.FRONTEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ needs.version.outputs.version }}
+          flags: |
+            --port=8080
+            --cpu=1
+            --memory=256Mi
+            --min-instances=0
+            --max-instances=5
+            --allow-unauthenticated
+
+  # Notificación de deploy exitoso
+  notify:
+    name: Notify Deployment
+    needs: [version, deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.version.outputs.version }}
+          release_name: Release ${{ needs.version.outputs.version }}
+          body: |
+            ## Deployed to Production
+
+            **Version:** ${{ needs.version.outputs.version }}
+            **Backend:** `${{ env.BACKEND_SERVICE }}`
+            **Frontend:** `${{ env.FRONTEND_SERVICE }}`
+            **Region:** `${{ env.REGION }}`
+            **Project:** `${{ env.PROJECT_ID }}`
+
+            ### Changelog
+            ${{ needs.version.outputs.changelog }}
+          draft: false
+          prerelease: false
