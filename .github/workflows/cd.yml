@@ -7,10 +7,11 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: us-east1
-  BACKEND_SERVICE: smart-customer-service-backend
-  FRONTEND_SERVICE: smart-customer-service-frontend
-  REGISTRY: us-east1-docker.pkg.dev
+  REGION: us-central1
+  BACKEND_SERVICE: smart-customer-backend-v2
+  FRONTEND_SERVICE: smart-customer-frontend-v2
+  REGISTRY: gcr.io
+  CLOUD_SQL_INSTANCE: info-lapaz-2:us-central1:smart-customer-db
 
 jobs:
   # Generar versión semántica basada en Conventional Commits
@@ -64,13 +65,13 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
 
       - name: Build and push Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/smart-customer-service/${{ env.BACKEND_SERVICE }}:${{ needs.version.outputs.version }}"
-          IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/smart-customer-service/${{ env.BACKEND_SERVICE }}:latest"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ needs.version.outputs.version }}"
+          IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:latest"
 
           docker build -f packages/backend/Dockerfile -t $IMAGE -t $IMAGE_LATEST .
           docker push $IMAGE
@@ -105,13 +106,13 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGISTRY }}
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker
 
       - name: Build and push Docker image
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/smart-customer-service/${{ env.FRONTEND_SERVICE }}:${{ needs.version.outputs.version }}"
-          IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/smart-customer-service/${{ env.FRONTEND_SERVICE }}:latest"
+          IMAGE="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ needs.version.outputs.version }}"
+          IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:latest"
 
           docker build -f packages/frontend/Dockerfile -t $IMAGE -t $IMAGE_LATEST .
           docker push $IMAGE
@@ -133,26 +134,26 @@ jobs:
         with:
           service: ${{ env.BACKEND_SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/smart-customer-service/${{ env.BACKEND_SERVICE }}:${{ needs.version.outputs.version }}
+          image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ needs.version.outputs.version }}
           env_vars: |
             NODE_ENV=production
+            DB_PORT=5432
+            INSTANCE_UNIX_SOCKET=/cloudsql/${{ env.CLOUD_SQL_INSTANCE }}
+            FRONTEND_URL=https://${{ env.FRONTEND_SERVICE }}-292882583632.${{ env.REGION }}.run.app
           secrets: |
-            DB_HOST=DB_HOST:latest
-            DB_PORT=DB_PORT:latest
-            DB_USER=DB_USER:latest
-            DB_PASSWORD=DB_PASSWORD:latest
-            DB_NAME=DB_NAME:latest
-            JWT_SECRET=JWT_SECRET:latest
-            WEATHER_API_KEY=WEATHER_API_KEY:latest
-            WEATHER_DEFAULT_CITY=WEATHER_DEFAULT_CITY:latest
-            FIREBASE_PROJECT_ID=FIREBASE_PROJECT_ID:latest
+            DB_USER=db-user:latest
+            DB_PASSWORD=db-password:latest
+            DB_NAME=db-name:latest
+            JWT_SECRET=jwt-secret:latest
           flags: |
             --port=8080
             --cpu=1
             --memory=512Mi
+            --timeout=300
             --min-instances=0
             --max-instances=10
             --allow-unauthenticated
+            --add-cloudsql-instances=${{ env.CLOUD_SQL_INSTANCE }}
 
   # Deploy Frontend a Cloud Run
   deploy-frontend:
@@ -170,7 +171,7 @@ jobs:
         with:
           service: ${{ env.FRONTEND_SERVICE }}
           region: ${{ env.REGION }}
-          image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/smart-customer-service/${{ env.FRONTEND_SERVICE }}:${{ needs.version.outputs.version }}
+          image: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ needs.version.outputs.version }}
           flags: |
             --port=8080
             --cpu=1
@@ -199,6 +200,8 @@ jobs:
             **Version:** ${{ needs.version.outputs.version }}
             **Backend:** `${{ env.BACKEND_SERVICE }}`
             **Frontend:** `${{ env.FRONTEND_SERVICE }}`
+            **Region:** `${{ env.REGION }}`
+            **Project:** `${{ env.PROJECT_ID }}`
 
             ### Changelog
             ${{ needs.version.outputs.changelog }}
