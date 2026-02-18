@@ -1,8 +1,9 @@
 FROM nginx:alpine
 
-# Nginx config for SPA on port 8080
+# Copy nginx configuration for SPA on port 8080
 COPY packages/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy built static files
 COPY packages/frontend/dist /usr/share/nginx/html
 
 EXPOSE 8080

@@ -1,17 +1,23 @@
 FROM node:20-alpine
 WORKDIR /app
+
+# Install pnpm
 RUN npm install -g pnpm@9.15.4
 
-# Install production deps
-COPY packages/backend/package.json ./
-COPY pnpm-lock.yaml ./
-RUN pnpm install --prod
+# Copy workspace files for dependency resolution
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/backend/package.json ./packages/backend/
 
-# Copy built app
-COPY packages/backend/dist ./dist
+# Install production dependencies
+RUN pnpm install --prod --filter @smart-customer-service/backend --frozen-lockfile
 
+# Copy built application
+COPY packages/backend/dist ./packages/backend/dist
+
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001 -G nodejs
 USER nestjs
 
 EXPOSE 8080
+WORKDIR /app/packages/backend
 CMD ["node", "dist/main.js"]
