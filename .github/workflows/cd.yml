@@ -5,6 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:  # Permitir ejecución manual
 
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
