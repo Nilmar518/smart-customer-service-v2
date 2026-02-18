@@ -10,13 +10,16 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const auth_module_1 = require("./auth/auth.module");
 const database_module_1 = require("./database/database.module");
+const firestore_module_1 = require("./firestore/firestore.module");
 const hello_module_1 = require("./hello/hello.module");
+const weather_module_1 = require("./weather/weather.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [database_module_1.DatabaseModule, auth_module_1.AuthModule, hello_module_1.HelloModule],
+        imports: [database_module_1.DatabaseModule, firestore_module_1.FirestoreModule, auth_module_1.AuthModule, hello_module_1.HelloModule, weather_module_1.WeatherModule],
+        exports: [database_module_1.DatabaseModule, firestore_module_1.FirestoreModule, auth_module_1.AuthModule, hello_module_1.HelloModule, weather_module_1.WeatherModule],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

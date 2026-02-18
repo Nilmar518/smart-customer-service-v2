@@ -1,0 +1,46 @@
+# Code Owners para Smart Customer Service v2
+#
+# Este archivo define quién debe aprobar cambios en diferentes partes del código.
+# Más info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner para todo el repositorio
+# * @team-lead
+
+# Backend
+/packages/backend/                    @backend-team
+/packages/backend/src/auth/           @backend-team @security-team
+/packages/backend/src/database/       @backend-team @dba-team
+/packages/backend/src/firestore/      @backend-team
+/packages/backend/src/weather/        @backend-team
+
+# Frontend
+/packages/frontend/                   @frontend-team
+/packages/frontend/src/components/    @frontend-team
+/packages/frontend/src/stores/        @frontend-team
+
+# Tests
+/packages/backend/test/               @backend-team @qa-team
+/packages/frontend/src/**/*.test.tsx  @frontend-team @qa-team
+
+# Infrastructure y DevOps
+/.github/workflows/                   @devops-team
+/packages/backend/Dockerfile          @devops-team
+/packages/frontend/Dockerfile         @devops-team
+/packages/backend/nginx.conf          @devops-team
+/packages/frontend/nginx.conf         @devops-team
+
+# Documentación
+/docs/                                @tech-writers
+/README.md                            @tech-writers
+/CLAUDE.md                            @tech-writers @team-lead
+/.planning/                           @team-lead
+
+# Configuración
+/.commitlintrc.json                   @devops-team
+/package.json                         @devops-team
+/pnpm-workspace.yaml                  @devops-team
+/tsconfig*.json                       @backend-team @frontend-team
+
+# Seguridad (requiere aprobación del equipo de seguridad)
+/packages/backend/src/auth/           @security-team
+/.env.example                         @security-team @devops-team

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '../stores/auth.store';
+import { useWeatherStore } from '../stores/weather.store';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -12,6 +13,7 @@ type Props = {
 
 export default function AuthForm({ mode, onAuthed }: Props) {
   const setToken = useAuthStore((s) => s.setToken);
+  const fetchWeather = useWeatherStore((s) => s.fetchWeather);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -42,6 +44,7 @@ export default function AuthForm({ mode, onAuthed }: Props) {
       if (!res.ok) throw new Error(data.message || 'Auth failed');
 
       setToken(data.accessToken);
+      fetchWeather(data.accessToken);
       setStatus('Authenticated');
       onAuthed();
     } catch (err) {

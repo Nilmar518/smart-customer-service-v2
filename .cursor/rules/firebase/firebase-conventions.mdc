@@ -1,0 +1,14 @@
+---
+description: Firebase Admin SDK conventions
+globs: ["**/firestore/**/*.ts"]
+alwaysApply: false
+---
+
+- Usar `firebase-admin` unicamente en el backend (nunca en frontend)
+- Inicializar Firebase Admin una sola vez en `FirestoreModule`
+- Usar `applicationDefault()` para credenciales en produccion
+- En tests, mockear `FirestoreService` completo (no firebase-admin directamente)
+- Coleccion principal: `users` en Firestore
+- Los documentos de Firestore usan el mismo `id` que PostgreSQL como document ID
+- No duplicar logica de negocio entre PostgreSQL y Firestore
+- FirestoreService solo expone: `saveUser()`, `getUserByEmail()`, `getUserById()`

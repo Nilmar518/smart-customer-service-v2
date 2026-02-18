@@ -1,0 +1,13 @@
+---
+description: Weather API conventions
+globs: ["**/weather/**/*.ts"]
+alwaysApply: false
+---
+
+- Usar OpenWeatherMap API (free tier) para obtener clima
+- El endpoint `GET /api/weather?city=<ciudad>` esta protegido con JWT (AuthGuard)
+- WeatherService encapsula toda la logica de llamada HTTP a la API externa
+- En tests unitarios, mockear la llamada HTTP (no llamar a la API real)
+- En tests e2e, usar `MockWeatherService` que devuelve datos fijos
+- Variables de entorno requeridas: `WEATHER_API_KEY`, `WEATHER_DEFAULT_CITY` (opcional)
+- Respuesta del endpoint incluye: temperatura, descripcion, ciudad, icono

@@ -1,0 +1,13 @@
+---
+description: GitHub Actions CI/CD conventions
+globs: [".github/workflows/**/*.yml"]
+alwaysApply: false
+---
+
+- Un solo workflow `ci.yml` con dos jobs: `unit-tests` y `e2e-tests`
+- E2E depende de UT: `needs: unit-tests` (primero UT, luego E2E)
+- Se dispara en `pull_request` hacia `main`
+- Usar pnpm/action-setup@v4 + actions/setup-node@v4 con cache pnpm
+- Node 20, pnpm install --frozen-lockfile
+- No se necesita PostgreSQL ni Firebase real (todo mockeado en tests)
+- Ramas: `main` es la principal, features siguen `feature/<nombre>`
