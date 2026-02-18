@@ -24,7 +24,7 @@ jobs:
     name: Generate Version
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.semver.outputs.version }}
+      version: ${{ steps.semver.outputs.new_tag }}
       changelog: ${{ steps.semver.outputs.changelog }}
     steps:
       - uses: actions/checkout@v4
