@@ -8,8 +8,8 @@ RUN npm install -g pnpm@9.15.4
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/backend/package.json ./packages/backend/
 
-# Install production dependencies
-RUN pnpm install --prod --filter @smart-customer-service/backend --frozen-lockfile
+# Install production dependencies (ignore scripts to skip husky prepare hook)
+RUN pnpm install --prod --filter @smart-customer-service/backend --frozen-lockfile --ignore-scripts
 
 # Copy built application
 COPY packages/backend/dist ./packages/backend/dist
